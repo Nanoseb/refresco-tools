@@ -118,7 +118,8 @@ def load_residuals(filename):
             print("Warning: you are ploting only each "+str(ith_line)+" iterations")
     
     with open(filename) as fin:
-        residuals = np.genfromtxt(itertools.islice(fin, ith_begining, None, ith_line), dtype=float, usecols=column2extract, skiprows=2)
+        residuals = np.genfromtxt(itertools.islice(fin, ith_begining, None, ith_line), dtype=float, usecols=column2extract, skip_header=2)
+
 
     return (residuals, header, file_length)
 
