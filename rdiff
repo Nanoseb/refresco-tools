@@ -1,0 +1,8 @@
+#!/bin/bash
+# Script to run vimdiff between a branch and the trunk of an svn repository
+# usage: rdiff file/in/your/branche.ext
+
+branchfile=$(realpath "$1")
+trunkfile=$(sed 's/branches\/[^\/]*/trunk/' <<<"$branchfile")
+
+vimdiff "$branchfile" "$trunkfile" 
