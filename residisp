@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 import os
 import sys
@@ -13,7 +13,7 @@ from matplotlib import rcParams
 from matplotlib import rc
 from matplotlib.ticker import FuncFormatter
 
-disp_sidebyside = False
+
 parser = argparse.ArgumentParser(description='Displays residuals from ReFRESCO computation.')
 
 parser.add_argument('path_or_jobid', type=str, nargs='?', help='jobid to display the residuals of, or path to residuals(_unstd).dat', default='.')
@@ -40,10 +40,11 @@ else:
 if args.both_l:
     disp_L2 = True
     disp_Linf = True
-if args.both_l_sidebyside:
+
+disp_sidebyside = args.both_l_sidebyside 
+if disp_sidebyside:
     disp_L2 = True
     disp_Linf = True
-    disp_sidebyside = True
 
 DISPLAY_END = args.end
 MAX_line = args.max_it
@@ -147,14 +148,14 @@ colorlist = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
              '#bcbd22', '#17becf']
 
 if disp_sidebyside:
-	f, (ax1,ax2) = pyplot.subplots(1,2,sharey=True)
+    f, (ax1,ax2) = pyplot.subplots(1,2,sharey=True)
 else:
-	f,ax = pyplot.subplots()
+    f,ax1 = pyplot.subplots()
 
 if len(filename) >= 50:
-    f.canvas.set_window_title('...' + filename[-50:]) 
+    f.canvas.set_window_title('...' + filename[-50:])
 else:
-    f.canvas.set_window_title(filename) 
+    f.canvas.set_window_title(filename)
 
 colorid = 0
 usedcolor = {}
@@ -166,31 +167,32 @@ for idx, column in enumerate(header):
 
     fieldname = re.sub("^[^_]*_","", column)
     
+    linealpha = 1
     if fieldname in usedcolor:
-        linealpha = 0.6
+        if not disp_sidebyside:
+            linealpha = 0.6
     else:
         usedcolor[fieldname] = colorlist[colorid]
         colorid = ( colorid + 1) % len(colorlist)
-        linealpha = 1
 
     linecolor = usedcolor[fieldname]
 
     if disp_sidebyside:
-    	label = re.sub("_", " ", column)
-    	label = re.sub("L2 ", "", label)
-    	label = re.sub("Linf ", "", label)
+        label = re.sub("_", " ", column)
+        label = re.sub("L2 ", "", label)
+        label = re.sub("Linf ", "", label)
     else:
-    	label = re.sub("_", " ", column)
-    	label = re.sub("L2 ", "L_2 - ", label)
-    	label = re.sub("Linf ", "L_\infty - ", label)
+        label = re.sub("_", " ", column)
+        label = re.sub("L2 ", "L_2 - ", label)
+        label = re.sub("Linf ", "L_\infty - ", label)
 
     if disp_sidebyside:
-			if idx <= (len(header)/2):
-				ax1.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
-			else:
-				ax2.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
+        if idx <= (len(header)/2):
+            ax1.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
+        else:
+            ax2.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
     else:
-			ax.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
+        ax1.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
 
 def format_tick_labels(x, pos):
     idx = (np.abs(residuals[:,0] - x)).argmin()
@@ -198,31 +200,21 @@ def format_tick_labels(x, pos):
     return "$" + str(int(x))+"$\n$("+str(timestep)+")$"
 
 # if unsteady
-if disp_sidebyside:
-	if residuals[-1,1] != 0:
-		ax1.xaxis.set_major_formatter(FuncFormatter(format_tick_labels))
-		ax1.set_xlabel("Iteration (Timestep)")
-		ax2.xaxis.set_major_formatter(FuncFormatter(format_tick_labels))
-		ax2.set_xlabel("Iteration (Timestep)")
-	else:
-		ax1.set_xlabel("Iteration")
-		ax2.set_xlabel("Iteration")
+if residuals[-1,1] != 0:
+    ax1.xaxis.set_major_formatter(FuncFormatter(format_tick_labels))
+    ax1.set_xlabel("Iteration (Timestep)")
+    if disp_sidebyside:
+        ax2.xaxis.set_major_formatter(FuncFormatter(format_tick_labels))
+        ax2.set_xlabel("Iteration (Timestep)")
 else:
-	if residuals[-1,1] != 0:
-		  ax.xaxis.set_major_formatter(FuncFormatter(format_tick_labels))
-		  ax.set_xlabel("Iteration (Timestep)")
-	else:
-		  ax.set_xlabel("Iteration")
+    ax1.set_xlabel("Iteration")
+    if disp_sidebyside:
+        ax2.set_xlabel("Iteration")
 
-
+ax1.set_ylabel("Residuals")
 if disp_sidebyside:
-	ax1.set_ylabel("Residuals")
-	ax1.set_title("$L_2$")
-	ax2.set_title("$L_{\infty}$")
-	leg = pyplot.legend()
-	leg.get_frame().set_linewidth(0.0)
-else:
-	ax.set_ylabel("Residuals")
-	leg = pyplot.legend()
-	leg.get_frame().set_linewidth(0.0)
+    ax1.set_title("$L_2$")
+    ax2.set_title("$L_{\infty}$")
+leg = pyplot.legend()
+leg.get_frame().set_linewidth(0.0)
 pyplot.show()
