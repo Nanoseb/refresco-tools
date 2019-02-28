@@ -13,7 +13,7 @@ from matplotlib import rcParams
 from matplotlib import rc
 from matplotlib.ticker import FuncFormatter
 
-
+disp_sidebyside = False
 parser = argparse.ArgumentParser(description='Displays residuals from ReFRESCO computation.')
 
 parser.add_argument('path_or_jobid', type=str, nargs='?', help='jobid to display the residuals of, or path to residuals(_unstd).dat', default='.')
@@ -21,6 +21,8 @@ parser.add_argument('--l2', action='store_true', default=False,
                     help='Plots L2 norm instead of Linf')
 parser.add_argument('--both-l', action='store_true', default=False,
                     help='Plots both Linf and L2 norms')
+parser.add_argument('--both-l-sidebyside', action='store_true', default=False,
+                    help='Plots both Linf and L2 norms, side by side')
 parser.add_argument('--max-it',  type=int, default=40000,
                     help='Maximum number of iterations to display')
 parser.add_argument('--end', action='store_true', default=False,
@@ -38,6 +40,10 @@ else:
 if args.both_l:
     disp_L2 = True
     disp_Linf = True
+if args.both_l_sidebyside:
+    disp_L2 = True
+    disp_Linf = True
+    disp_sidebyside = True
 
 DISPLAY_END = args.end
 MAX_line = args.max_it
@@ -115,7 +121,7 @@ def load_residuals(filename):
         ith_begining = 0
         ith_line = max(1,int(1+(file_length / (MAX_line+1))))
         if ith_line > 10:
-            print("Warning: you are ploting only each "+str(ith_line)+" iterations")
+            print("Warning: you are plotting only each "+str(ith_line)+" iterations")
     
     with open(filename) as fin:
         residuals = np.genfromtxt(itertools.islice(fin, ith_begining, None, ith_line), dtype=float, usecols=column2extract, skip_header=2)
@@ -140,7 +146,11 @@ colorlist = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
              '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
              '#bcbd22', '#17becf']
 
-f, ax = pyplot.subplots()
+if disp_sidebyside:
+	f, (ax1,ax2) = pyplot.subplots(1,2,sharey=True)
+else:
+	f,ax = pyplot.subplots()
+
 if len(filename) >= 50:
     f.canvas.set_window_title('...' + filename[-50:]) 
 else:
@@ -164,12 +174,23 @@ for idx, column in enumerate(header):
         linealpha = 1
 
     linecolor = usedcolor[fieldname]
-    label = re.sub("_", " ", column)
-    label = re.sub("L2 ", "L_2 - ", label)
-    label = re.sub("Linf ", "L_\infty - ", label)
-    
-    ax.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
 
+    if disp_sidebyside:
+    	label = re.sub("_", " ", column)
+    	label = re.sub("L2 ", "", label)
+    	label = re.sub("Linf ", "", label)
+    else:
+    	label = re.sub("_", " ", column)
+    	label = re.sub("L2 ", "L_2 - ", label)
+    	label = re.sub("Linf ", "L_\infty - ", label)
+
+    if disp_sidebyside:
+			if idx <= (len(header)/2):
+				ax1.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
+			else:
+				ax2.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
+    else:
+			ax.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
 
 def format_tick_labels(x, pos):
     idx = (np.abs(residuals[:,0] - x)).argmin()
@@ -177,13 +198,31 @@ def format_tick_labels(x, pos):
     return "$" + str(int(x))+"$\n$("+str(timestep)+")$"
 
 # if unsteady
-if residuals[-1,1] != 0:
-    ax.xaxis.set_major_formatter(FuncFormatter(format_tick_labels))
-    ax.set_xlabel("Iteration (Timestep)")
+if disp_sidebyside:
+	if residuals[-1,1] != 0:
+		ax1.xaxis.set_major_formatter(FuncFormatter(format_tick_labels))
+		ax1.set_xlabel("Iteration (Timestep)")
+		ax2.xaxis.set_major_formatter(FuncFormatter(format_tick_labels))
+		ax2.set_xlabel("Iteration (Timestep)")
+	else:
+		ax1.set_xlabel("Iteration")
+		ax2.set_xlabel("Iteration")
 else:
-    ax.set_xlabel("Iteration")
+	if residuals[-1,1] != 0:
+		  ax.xaxis.set_major_formatter(FuncFormatter(format_tick_labels))
+		  ax.set_xlabel("Iteration (Timestep)")
+	else:
+		  ax.set_xlabel("Iteration")
 
-ax.set_ylabel("Residuals")
-leg = pyplot.legend()
-leg.get_frame().set_linewidth(0.0)
+
+if disp_sidebyside:
+	ax1.set_ylabel("Residuals")
+	ax1.set_title("$L_2$")
+	ax2.set_title("$L_{\infty}$")
+	leg = pyplot.legend()
+	leg.get_frame().set_linewidth(0.0)
+else:
+	ax.set_ylabel("Residuals")
+	leg = pyplot.legend()
+	leg.get_frame().set_linewidth(0.0)
 pyplot.show()
