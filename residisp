@@ -3,6 +3,7 @@
 
 import os
 import sys
+import time
 import subprocess
 import argparse
 import itertools
@@ -29,6 +30,8 @@ parser.add_argument('--end', action='store_true', default=False,
                     help='Display only the end of the residuals')
 parser.add_argument('--very-end', action='store_true', default=False,
                     help='Display only the last 400 iterations of the residuals')
+parser.add_argument('--follow', action='store_true', default=False,
+                    help='Auto refresh the plots when new data is written')
 
 args = parser.parse_args()
 if args.l2:
@@ -45,6 +48,8 @@ disp_sidebyside = args.both_l_sidebyside
 if disp_sidebyside:
     disp_L2 = True
     disp_Linf = True
+
+follow = args.follow
 
 DISPLAY_END = args.end
 MAX_line = args.max_it
@@ -89,10 +94,10 @@ if foldername:
         raise ValueError('File not found')
 
 
-def load_residuals(filename):
+def load_header(filename):
     """
-        Loads residuals file in a numpy array
-            makes sure only useful columns and a limited amount of lines are loaded
+        Loads residuals file header and compute size and ith_line
+            to make sure only useful columns and a limited amount of lines are loaded
     """
 
     with open(filename) as fin:
@@ -123,21 +128,30 @@ def load_residuals(filename):
         ith_line = max(1,int(1+(file_length / (MAX_line+1))))
         if ith_line > 10:
             print("Warning: you are plotting only each "+str(ith_line)+" iterations")
-    
+
+    return (header, file_length, ith_begining, ith_line, column2extract)
+
+def load_residuals(filename, ith_begining, ith_line, column2extract):
+    """
+        Load part of the residuals file, from ith_begining to the end every ith_line lines
+    """
+
     with open(filename) as fin:
-        residuals = np.genfromtxt(itertools.islice(fin, ith_begining, None, ith_line), dtype=float, usecols=column2extract, skip_header=2)
+        residuals_return = np.genfromtxt(itertools.islice(fin, ith_begining, None, ith_line), dtype=float, usecols=column2extract, skip_header=2)
 
-
-    return (residuals, header, file_length)
-
+    return residuals_return
 
 
 # Read of the residual.dat
-residuals, header, file_length = load_residuals(filename)
+header, file_length, ith_begining, ith_line, column2extract = load_header(filename)
+residuals = load_residuals(filename, ith_begining, ith_line, column2extract)
 print("Plot residuals for:   " + filename)
 print("Data point displayed: " + str(len(residuals)) + " (out of " + str(file_length) + ")")
 
-# Display
+##################################
+# Start display related section
+##################################
+
 rc('text', usetex=True)
 rcParams['font.family'] = 'serif'
 rcParams["axes.grid"] = True
@@ -157,9 +171,13 @@ if len(filename) >= 50:
 else:
     f.canvas.set_window_title(filename)
 
+f.canvas.mpl_connect('close_event', lambda evt: sys.exit(0))
+
 colorid = 0
 usedcolor = {}
+plot_lines = [[]]*len(header)
 
+# set up legend, line style etc.
 for idx, column in enumerate(header):
 
     if not column.startswith("L"):
@@ -186,19 +204,49 @@ for idx, column in enumerate(header):
         label = re.sub("L2 ", "L_2 - ", label)
         label = re.sub("Linf ", "L_\infty - ", label)
 
-    if disp_sidebyside:
-        if idx <= (len(header)/2):
-            ax1.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
-        else:
-            ax2.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
+    if idx <= (len(header)/2) or not disp_sidebyside:
+        ax = ax1
     else:
-        ax1.semilogy(residuals[:,0], residuals[:,idx], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
+        ax = ax2
+
+    plot_lines[idx], = ax.semilogy([], [], alpha=linealpha, color=linecolor, label=r"$"+label + "$")
+
+
+def fill_plot(residuals, header, plot_lines):
+    """
+        Fill the plot with residuals data
+    """
+    for idx, column in enumerate(header):
+
+        if not column.startswith("L"):
+            continue
+
+        plot_lines[idx].set_xdata(residuals[:,0])
+        plot_lines[idx].set_ydata(residuals[:,idx])
+
+
+def draw_plot():
+    """
+        autoscale axis and draw plot
+    """
+    ax1.relim()
+    ax1.autoscale_view()
+
+    if disp_sidebyside:
+        ax2.relim()
+        ax2.autoscale_view()
+
+    pyplot.draw()
+
 
 def format_tick_labels(x, pos):
     idx = (np.abs(residuals[:,0] - x)).argmin()
     timestep = int(residuals[idx,1])
     return "$" + str(int(x))+"$\n$("+str(timestep)+")$"
 
+
+
+# Axis label and titles
 # if unsteady
 if residuals[-1,1] != 0:
     ax1.xaxis.set_major_formatter(FuncFormatter(format_tick_labels))
@@ -215,6 +263,25 @@ ax1.set_ylabel("Residuals")
 if disp_sidebyside:
     ax1.set_title("$L_2$")
     ax2.set_title("$L_{\infty}$")
+
 leg = pyplot.legend()
 leg.get_frame().set_linewidth(0.0)
-pyplot.show()
+
+
+if follow:
+    ith_begining = ith_begining+ith_line*len(residuals)
+
+    while True:
+        fill_plot(residuals, header, plot_lines)
+        draw_plot()
+        pyplot.pause(5)
+
+        residuals_new = load_residuals(filename, ith_begining, 1, column2extract)
+        if residuals_new.size != 0:
+            ith_begining = ith_begining + len(residuals_new)
+            residuals = np.concatenate((residuals, residuals_new))
+else:
+    fill_plot(residuals, header, plot_lines)
+    draw_plot()
+    pyplot.show()
+

@@ -11,6 +11,7 @@ residisp 3729365          # slurm job ID
 residisp ~/path/to/computation/folder
 residisp --very-end -l2
 residisp --max-it 20000   # to reduce the memory consumption: limit the number of iteration loaded
+residisp --follow         # to automatically refresh the output
 ```
 
 ## rdiff
