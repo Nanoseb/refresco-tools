@@ -3,7 +3,6 @@
 
 import os
 import sys
-import time
 import subprocess
 import argparse
 import itertools
@@ -13,6 +12,8 @@ from matplotlib import pyplot
 from matplotlib import rcParams
 from matplotlib import rc
 from matplotlib.ticker import FuncFormatter
+
+np.warnings.filterwarnings('ignore')
 
 
 parser = argparse.ArgumentParser(description='Displays residuals from ReFRESCO computation.')
@@ -34,18 +35,12 @@ parser.add_argument('--follow', action='store_true', default=False,
                     help='Auto refresh the plots when new data is written')
 
 args = parser.parse_args()
-if args.l2:
-    disp_L2 = True
-    disp_Linf = False
-else:
-    disp_L2 = False
-    disp_Linf = True
-if args.both_l:
-    disp_L2 = True
-    disp_Linf = True
+disp_L2 = args.l2
+disp_Linf = not args.l2
 
 disp_sidebyside = args.both_l_sidebyside 
-if disp_sidebyside:
+
+if disp_sidebyside or args.both_l:
     disp_L2 = True
     disp_Linf = True
 
@@ -271,6 +266,7 @@ leg.get_frame().set_linewidth(0.0)
 if follow:
     ith_begining = ith_begining+ith_line*len(residuals)
 
+    # this infinite loop ends when the user closes the window
     while True:
         fill_plot(residuals, header, plot_lines)
         draw_plot()
