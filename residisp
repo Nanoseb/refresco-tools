@@ -132,7 +132,7 @@ def load_residuals(filename, ith_begining, ith_line, column2extract):
     """
 
     with open(filename) as fin:
-        residuals_return = np.genfromtxt(itertools.islice(fin, ith_begining, None, ith_line), dtype=float, usecols=column2extract, skip_header=2)
+        residuals_return = np.loadtxt(itertools.islice(fin, ith_begining, None, ith_line), dtype=float, usecols=column2extract, skiprows=2)
 
     return residuals_return
 
