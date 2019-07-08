@@ -2,6 +2,7 @@
 # This script check the use of modules, and reports when a module is imported withoug being used
 # They may be false positive since it only checks for ' modulenale_' presence in files,
 # so most global variables won't be properly detected
+# License MIT
 
 SOURCE=$REFRESCO_CODE_DIR/src
 
