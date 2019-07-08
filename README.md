@@ -37,3 +37,7 @@ zr                    unfold the entire file
 :set diffopt+=iwhite  ignore white space comparison (can be added in .vimrc)
 ctrl-w w              switch between windows
 ```
+ 
+## check\_import
+Check if a module that has been imported is actually used.
+Note that this only checks for calls to `$modulename_XXX`, they hence may be many false positive.
