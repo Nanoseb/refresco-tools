@@ -1,24 +1,59 @@
 #!/bin/bash
 # This script check the use of modules, and reports when a module is imported withoug being used
-# They may be false positive since it only checks for ' modulenale_' presence in files,
-# so most global variables won't be properly detected
 # License MIT
 
 SOURCE=$REFRESCO_CODE_DIR/src
+SCRIPT=check_import_cleanup.sh
 
-fileList=$(find $SOURCE -name "*.F90" | sort)
+gen_line() {
+    printf "%${1}s\n" "" | sed 's/\ /-/g'
+}
+
+if [[ "$1" ]]
+then
+    fileList=$*
+else
+    fileList=$(find $SOURCE -maxdepth 1 -name "*.F90" | sort)
+fi
+
+echo '#!/bin/bash' > $SCRIPT
 
 while read file
 do
-    echo "--------------------------------"
+
+    gen_line 110
     echo $file
-    echo "--------------------------------"
 
     USEModule=$(grep "^USE " $file | awk '{print $2}')
 
+    localVariableList=$(ctags -f - -x "$file" | awk '{print $2 " " $1}' | grep -E '^variable' | awk '{print $2}')
+
     while read module
     do
-        [[ ! $(grep -i -m 1 "^[^'\!']* ${module}_" $file) ]] && echo '  -- ' $module
+        modulefile=$SOURCE/${module}.F90
+        if [[ ! -e "$modulefile" ]]
+        then
+            modulefile=$SOURCE/automatic/${module}.F90
+            if [[ ! -e "$modulefile" ]]
+            then
+                echo $module not found
+                continue
+            fi
+        fi
+        functionList=$(ctags -f - -x "$modulefile" | awk '{print $2 " " $1}' | grep -E '^subroutine|^function' | awk '{print " "$2}')
+        interfaceList=$(sed 's/\!.*$//' "$modulefile" | grep "^INTERFACE" | awk '{print " "$NF}' | sed 's/)//;s/\ (//')
+        variableList=$(ctags -f - -x "$modulefile" | awk '{print $2 " " $1}' | grep -E '^variable' | awk '{print $2}' | grep -v -wFf <(echo -e "$localVariableList"))
+
+
+        functionFound=$(grep -iFf <(echo -e "$functionList\n$interfaceList" | sed '/^$/d') <(sed s/\!.*$// "$file"))
+        variableFound=$(grep -iFf <(echo -e "$variableList") <(sed s/\!.*$// "$file"))
+
+        if [[ -z "$functionFound" ]] && [[ -z "$variableFound" ]] 
+        then
+            echo $module
+            echo sed -i s/\\^USE\\ $module/\\!check_import\\ USE\\ $module/ \"$file\" >> "$SCRIPT"
+        fi
+
 
     done <<<"$USEModule"
 
@@ -27,22 +62,19 @@ do
 done <<<"$fileList"
 
 
-#moduleList=$(grep -m 1 '^MODULE ' $SOURCE/*F90 | awk '{print $NF}' | sort) # | head -n 3)
 
-#cd $SOURCE
+echo
+echo ----
+echo
 
-#while read module
-#do
-#    echo "--------------------------------"
-#    echo $module
-#    echo "--------------------------------"
-#    echo
-#    USEModule=$(grep -B 5000 -m 1 -i "^USE $module" *F90 | grep '\-MODULE ' | awk '{print $NF}' | sort)
-#    CALLModule=$(grep -B 50000 -i -m 1 "^[^'\!']* ${module}_" *F90 | grep '\-MODULE ' | awk '{print $NF}' | sort)
+echo "To apply the changes run:"
+echo "bash $SCRIPT"
+echo
 
-#    diff  <(echo "$USEModule") <(echo "$CALLModule") | grep '^<'
-#    echo
+echo "To revert back to the original files run:"
+echo sed -i s/\\^\!check_import\\ // $SOURCE/\*
+echo
 
-#done <<<"$moduleList"
-
+echo "Finally, to definitively remove the check_import lines (once everything compiles), run:"
+echo sed -i /\\^\!check_import\\ .*$/d $SOURCE/\*
 
