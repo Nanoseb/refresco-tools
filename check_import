@@ -11,7 +11,7 @@ gen_line() {
 
 if [[ "$1" ]]
 then
-    fileList=$*
+    fileList=$(echo "$@" | sed 's/ /\n/g')
 else
     fileList=$(find $SOURCE -maxdepth 1 -name "*.F90" | sort)
 fi
