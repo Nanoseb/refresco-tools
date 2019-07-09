@@ -72,9 +72,9 @@ echo "bash $SCRIPT"
 echo
 
 echo "To revert back to the original files run:"
-echo sed -i s/\\^\!check_import\\ // $SOURCE/\*.F90
+echo sed -i s/\\^\\!check_import\\ // $SOURCE/\*.F90
 echo
 
 echo "Finally, to definitively remove the check_import lines (once everything compiles), run:"
-echo sed -i /\\^\!check_import\\ .*$/d $SOURCE/\*.F90
+echo sed -i /\\^\\!check_import\\ .*$/d $SOURCE/\*.F90
 
