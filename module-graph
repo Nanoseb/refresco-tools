@@ -96,6 +96,7 @@ else:
 # Compute node positions
 ##########################
 
+# search depth in the graph, increase this value if the 'refresco' module is not the only module being at the top of the graph
 cutoff = 29
 
 def get_distance_to_bottom(module):
