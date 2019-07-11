@@ -41,3 +41,10 @@ ctrl-w w              switch between windows
 ## check\_import
 Check if a module that has been imported is actually used.
 This also generates a script called `check_impot_cleanup.sh` that will comment out all the useless `USE ` statements.
+
+Dependencies: ctags
+
+## module-graph
+This script generates a graph made of ReFRESCO's module, module are linked based on they `USE` statements.
+
+Dependencies: pyvis

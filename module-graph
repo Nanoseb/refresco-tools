@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# script to generate a graph made of ReFRESCO's module, links between them represent USE statements
+# License MIT
+
+import os
+import sys
+import glob
+import argparse
+import re
+import networkx as nx
+from pyvis.network import Network
+from multiprocessing import Pool
+
+# import seaborn as sns
+# current_palette = sns.color_palette('pastel')
+# hex_palette = current_palette.as_hex()
+hex_palette = ['#fab0e4', '#ffb482', '#8de5a1', '#ff9f9b', '#d0bbff', '#debb9b', '#a1c9f4','#cfcfcf', '#fffea3', '#b9f2f0']
+
+# size of the plot
+size_factor = 50
+
+def toDiscard(edge):
+    """
+        defines which module to discard from being plotted
+    """
+    return edge[1].endswith("controls") or \
+           edge[0].endswith("controls") or \
+           "controls_" in edge
+
+
+##########################
+# parsing arguments
+##########################
+
+parser = argparse.ArgumentParser(description='Generates module graph for ReFRESCO.')
+
+parser.add_argument('path', type=str, nargs='?', help='path to ReFRESCO Code/src directory, default being $REFRESCO_CODE_DIR/src', default='REFRESCO_CODE_DIR/src')
+parser.add_argument('--dest', type=str, help='path to the html output file', default="refresco-module-graph.html")
+parser.add_argument('-j', type=int, help='Number of threads to use', default=-1) 
+
+args = parser.parse_args()
+
+nproc = args.j
+
+if os.path.isdir(args.dest):
+    HTML_export = args.dest + "/refresco-module-graph.html"
+else:
+    HTML_export = args.dest
+
+if args.path == 'REFRESCO_CODE_DIR/src':
+    sourcePath = os.environ['REFRESCO_CODE_DIR']+"/src"
+else:
+    sourcePath = args.path
+
+
+
+##########################
+# read .F90 files
+##########################
+
+USElinkList = []
+moduleLevelList = []
+for file in glob.iglob(sourcePath+"/*F90"):
+    module = os.path.basename(file)[:-4]
+    with open(file, 'r') as f:
+        for line in f.readlines():
+            if line.startswith("!"):
+                elem = re.search("^!.*Level:\ *(.*)$", line)
+                if elem:
+                    level = elem[1].split('/')[0].lower()
+                    if not ('?' in level or level == '-'):
+                        moduleLevelList.append([module, level])
+
+            if line.startswith("USE "):
+                elem = re.search("^USE\ *([a-zA-Z0-9_]*)", line)
+                if elem and not toDiscard([module, elem[1]]):
+                    USElinkList.append([module, elem[1]])
+
+##########################
+# build nx graph
+##########################
+G = nx.DiGraph()
+for edge in USElinkList:
+    G.add_edges_from([edge])
+
+
+cyclic = list(nx.simple_cycles(G))
+if cyclic:
+    print("cyclic import, exiting", cyclic)
+    sys.exit(1)
+else:
+    print("no cyclic import")
+
+##########################
+# Compute node positions
+##########################
+
+cutoff = 29
+
+def get_distance_to_bottom(module):
+    print(' {}/{}  {}                 '.format(module[0], len(G.nodes), module[1]), end="\r")
+    try:
+        result = max([len(path) for path in nx.algorithms.simple_paths.all_simple_paths(G, module[1], 'parameters', cutoff=cutoff)])
+    except:
+        result = 0
+    return result
+
+# parallelisation
+if nproc == -1:
+    pool = Pool()
+else:
+    pool = Pool(nproc)
+
+args = list(enumerate(G.nodes))
+result = pool.map(get_distance_to_bottom, args)
+
+distance_to_bottom = {}
+for i, module in args:
+    distance_to_bottom[module] = result[i]
+
+
+
+
+stageList = [ [] for a in range(distance_to_bottom['refresco']+1) ]
+
+for key, value in distance_to_bottom.items():
+    if value == -1:
+        stageList[0].append(key)
+    else:
+        stageList[value].append(key)
+
+position = {}
+
+for i, stage in enumerate(stageList):
+    for j, module in enumerate(stage):
+        position[module] = ((j+1)*30/(len(stage)+1),i)
+
+
+
+##########################
+# Assign levels
+##########################
+
+G_pyvis = Network(height="100%", width="100%", directed=True)
+levelList = sorted(list(set([ elem[1] for elem in moduleLevelList ])))
+
+level_color_dict = {}
+for i, level in enumerate(levelList):
+    level_color_dict[level] = hex_palette[(i)%len(hex_palette)]
+
+moduleLevelDict = {}
+for module, level in moduleLevelList:
+    moduleLevelDict[module] = level
+
+def get_color(module):
+    if module in moduleLevelDict:
+        return level_color_dict[moduleLevelDict[module]]
+    else:
+        return '#ffffff'
+
+# generate level nodes
+for i, level in enumerate(levelList):
+    G_pyvis.add_node(level, 
+                     level,
+                     title=level,
+                     x=-5*size_factor, 
+                     y=-2*size_factor*i,
+                     shape='ellipse',
+                     color=level_color_dict[level])
+
+
+##########################
+# Display main graph
+##########################
+moduleList  = [item for sublist in USElinkList for item in sublist]
+moduleList = list(set(moduleList))
+
+for module in moduleList:
+    G_pyvis.add_node(module,
+                     module,
+                     title=module,
+                     shape="ellipse",
+                     x=size_factor*position[module][0],
+                     y=-size_factor*position[module][1],
+                     physics=False,
+                     color=get_color(module))
+
+for edge in USElinkList:
+    G_pyvis.add_edge(edge[0], edge[1])
+
+
+G_pyvis.set_options("""
+  var options = {
+                "configure": {
+                        "enabled": false
+                },
+                "edges": {
+                        "color": {
+                                "color": "rgba(55,132,233,1)",
+                                "highlight": "rgba(244,17,31,1)",
+                                "inherit": false
+                        },
+                        "smooth": {
+                                "enabled": true,
+                                "type": "continuous"
+                        }
+                },
+                "interaction": {
+                        "dragNodes": true,
+                        "hideEdgesOnDrag": false,
+                        "hideNodesOnDrag": false
+                },
+                "physics": {
+                        "enabled": true
+                }
+        }""")
+
+G_pyvis.write_html(HTML_export)
+print("{} generated".format(HTML_export))
+
