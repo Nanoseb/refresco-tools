@@ -14,7 +14,7 @@ from pyvis.network import Network
 # import seaborn as sns
 # current_palette = sns.color_palette('pastel')
 # hex_palette = current_palette.as_hex()
-hex_palette = ['#fab0e4', '#ffb482', '#8de5a1', '#ff9f9b', '#d0bbff', '#debb9b', '#a1c9f4','#cfcfcf', '#fffea3', '#b9f2f0']
+hex_palette = ['#fab0e4', '#ffb482', '#8de5a1', '#ff9f9b', '#d0bbff', '#debb9b', '#cfcfcf', '#fffea3', '#b9f2f0', '#a1c9f4']
 
 # size of the plot
 size_factor = 50
