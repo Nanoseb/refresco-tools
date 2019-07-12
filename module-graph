@@ -7,6 +7,7 @@ import os
 import sys
 import glob
 import argparse
+from itertools import chain
 import re
 import networkx as nx
 from pyvis.network import Network
@@ -19,14 +20,6 @@ hex_palette = ['#fab0e4', '#ffb482', '#8de5a1', '#ff9f9b', '#d0bbff', '#debb9b',
 # size of the plot
 size_factor = 50
 
-def toDiscard(edge):
-    """
-        defines which module to discard from being plotted
-    """
-    return edge[1].endswith("controls") or \
-           edge[0].endswith("controls") or \
-           "controls_" in edge
-
 
 ##########################
 # parsing arguments
@@ -36,9 +29,11 @@ parser = argparse.ArgumentParser(description='Generates module graph for ReFRESC
 
 parser.add_argument('path', type=str, nargs='?', help='path to ReFRESCO Code/src directory, default being $REFRESCO_CODE_DIR/src', default='REFRESCO_CODE_DIR/src')
 parser.add_argument('--dest', type=str, help='path to the html output file', default="refresco-module-graph.html")
+parser.add_argument('--automatic', help='parse modules in the /automatic folder', action='store_true')
 
 args = parser.parse_args()
 
+automatic = args.automatic 
 if os.path.isdir(args.dest):
     HTML_export = args.dest + "/refresco-module-graph.html"
 else:
@@ -59,9 +54,21 @@ print("source folder: {}".format(sourcePath))
 
 USElinkList = []
 moduleLevelList = []
-for file in glob.iglob(sourcePath+"/*F90"):
-    module = os.path.basename(file)[:-4]
-    with open(file, 'r') as f:
+
+
+if automatic:
+    automaticModule = []
+    fileList = chain(glob.iglob(sourcePath+"/*F90"), glob.iglob(sourcePath+"/automatic/*F90"))
+else:
+    automaticModule = [ os.path.basename(filename)[:-4] for filename in glob.glob(sourcePath+"/automatic/*F90") ]
+    fileList = glob.iglob(sourcePath+"/*F90")
+
+def toDiscard(edge):
+    return edge in automaticModule
+
+for filename in fileList:
+    module = os.path.basename(filename)[:-4]
+    with open(filename, 'r') as f:
         for line in f.readlines():
             if line.startswith("!"):
                 elem = re.search("^!.*Level:\ *(.*)$", line)
@@ -70,10 +77,10 @@ for file in glob.iglob(sourcePath+"/*F90"):
                     if not ('?' in level or level == '-'):
                         moduleLevelList.append([module, level])
 
-            if line.startswith("USE "):
-                elem = re.search("^USE\ *([a-zA-Z0-9_]*)", line)
-                if elem and not toDiscard([module, elem[1]]):
-                    USElinkList.append([module, elem[1]])
+            if line.lower().startswith("use "):
+                elem = re.search("^(use|USE)\ +([a-zA-Z0-9_]*).*", line)
+                if elem and not toDiscard(module) and not toDiscard(elem[2]):
+                    USElinkList.append([module, elem[2]])
 
 ##########################
 # build nx graph
