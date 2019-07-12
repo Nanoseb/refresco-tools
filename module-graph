@@ -10,7 +10,6 @@ import argparse
 import re
 import networkx as nx
 from pyvis.network import Network
-from multiprocessing import Pool
 
 # import seaborn as sns
 # current_palette = sns.color_palette('pastel')
@@ -50,6 +49,8 @@ if args.path == 'REFRESCO_CODE_DIR/src':
 else:
     sourcePath = args.path
 
+print("source folder: {}".format(sourcePath))
+
 
 
 ##########################
@@ -84,15 +85,14 @@ for edge in USElinkList:
 
 cyclic = list(nx.simple_cycles(G))
 if cyclic:
-    print("cyclic import, exiting", cyclic)
+    print("Circular import, exiting", cyclic)
     sys.exit(1)
 else:
-    print("no cyclic import")
+    print("No circular import")
 
 ##########################
 # Compute node positions
 ##########################
-
 
 stageDict = {}
 for module in G.nodes:
@@ -108,7 +108,6 @@ while stageDict != prevStageDict:
             if stageDict[child] > maxStage:
                 maxStage = stageDict[child]
         stageDict[module] = maxStage +1
-
 
 stageList = [ [] for a in range(stageDict['refresco']+1) ]
 
