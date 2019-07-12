@@ -37,11 +37,8 @@ parser = argparse.ArgumentParser(description='Generates module graph for ReFRESC
 
 parser.add_argument('path', type=str, nargs='?', help='path to ReFRESCO Code/src directory, default being $REFRESCO_CODE_DIR/src', default='REFRESCO_CODE_DIR/src')
 parser.add_argument('--dest', type=str, help='path to the html output file', default="refresco-module-graph.html")
-parser.add_argument('-j', type=int, help='Number of threads to use', default=-1) 
 
 args = parser.parse_args()
-
-nproc = args.j
 
 if os.path.isdir(args.dest):
     HTML_export = args.dest + "/refresco-module-graph.html"
@@ -96,36 +93,26 @@ else:
 # Compute node positions
 ##########################
 
-# search depth in the graph, increase this value if the 'refresco' module is not the only module being at the top of the graph
-cutoff = 29
 
-def get_distance_to_bottom(module):
-    print(' {}/{}  {}                 '.format(module[0], len(G.nodes), module[1]), end="\r")
-    try:
-        result = max([len(path) for path in nx.algorithms.simple_paths.all_simple_paths(G, module[1], 'parameters', cutoff=cutoff)])
-    except:
-        result = 0
-    return result
+stageDict = {}
+for module in G.nodes:
+    stageDict[module] = 0
 
-# parallelisation
-if nproc == -1:
-    pool = Pool()
-else:
-    pool = Pool(nproc)
-
-args = list(enumerate(G.nodes))
-result = pool.map(get_distance_to_bottom, args)
-
-distance_to_bottom = {}
-for i, module in args:
-    distance_to_bottom[module] = result[i]
+prevStageDict = {}
+while stageDict != prevStageDict:
+    prevStageDict = stageDict.copy()
+    for module in G.nodes:
+        stage = stageDict[module]
+        maxStage = -1
+        for child in G.successors(module):
+            if stageDict[child] > maxStage:
+                maxStage = stageDict[child]
+        stageDict[module] = maxStage +1
 
 
+stageList = [ [] for a in range(stageDict['refresco']+1) ]
 
-
-stageList = [ [] for a in range(distance_to_bottom['refresco']+1) ]
-
-for key, value in distance_to_bottom.items():
+for key, value in stageDict.items():
     if value == -1:
         stageList[0].append(key)
     else:
