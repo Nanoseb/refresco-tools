@@ -29,8 +29,9 @@ parser = argparse.ArgumentParser(description='Generates module graph for ReFRESC
 
 parser.add_argument('path', type=str, nargs='?', help='path to ReFRESCO Code/src directory, default being $REFRESCO_CODE_DIR/src', default='REFRESCO_CODE_DIR/src')
 parser.add_argument('--dest', type=str, help='path to the html output file', default="refresco-module-graph.html")
-parser.add_argument('--automatic', help='parse modules in the /automatic folder', action='store_true')
-
+parser.add_argument('--automatic', dest='automatic', help='display modules in the /automatic folder', action='store_true')
+parser.add_argument('--no-automatic', dest='automatic', help='do not display modules in the /automatic folder [default]', action='store_false')
+parser.set_defaults(automatic=False)
 args = parser.parse_args()
 
 automatic = args.automatic 
@@ -116,12 +117,9 @@ while stageDict != prevStageDict:
                 maxStage = stageDict[child]
         stageDict[module] = maxStage +1
 
-stageList = [ [] for a in range(stageDict['refresco']+1) ]
+stageList = [ [] for _ in range(max(stageDict.values())+1) ]
 
 for key, value in stageDict.items():
-    if value == -1:
-        stageList[0].append(key)
-    else:
         stageList[value].append(key)
 
 position = {}
