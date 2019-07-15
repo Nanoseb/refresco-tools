@@ -68,15 +68,17 @@ def toDiscard(edge):
     return edge in automaticModule
 
 for filename in fileList:
+    noLevel = True
     module = os.path.basename(filename)[:-4]
     with open(filename, 'r') as f:
         for line in f.readlines():
-            if line.startswith("!"):
+            if line.startswith("!") and noLevel:
                 elem = re.search("^!.*Level:\ *(.*)$", line)
                 if elem:
                     level = elem[1].split('/')[0].lower()
                     if not ('?' in level or level == '-'):
                         moduleLevelList.append([module, level])
+                        noLevel = False
 
             if line.lower().startswith("use "):
                 elem = re.search("^(use|USE)\ +([a-zA-Z0-9_]*).*", line)
