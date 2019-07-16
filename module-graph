@@ -190,7 +190,8 @@ for edge in USElinkList:
     G_pyvis.add_edge(edge[0], edge[1])
 
 
-G_pyvis.set_options("""
+try:
+    G_pyvis.set_options("""
   var options = {
                 "configure": {
                         "enabled": false
@@ -215,6 +216,11 @@ G_pyvis.set_options("""
                         "enabled": true
                 }
         }""")
+except AttributeError:
+    import warnings
+    warnings.warn("Use the lastest version of pyvis to have the proper output")
+
+
 
 G_pyvis.write_html(HTML_export)
 print("{} generated".format(HTML_export))
