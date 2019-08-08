@@ -48,3 +48,7 @@ Dependencies: ctags
 This script generates a graph made of ReFRESCO's module, module are linked based on they `USE` statements.
 
 Dependencies: pyvis
+
+## latex-trim
+This script returns trim parameter the image loaded given in parameter using mouse selection
+

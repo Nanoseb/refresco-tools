@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Small script to get the trim parameters for Latex
+# Usage:
+#    latex-trim [filename]
+#
+# License WTFPL
+
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+import matplotlib.widgets as widgets
+
+
+filename = sys.argv[1]
+
+if filename.endswith(".pdf"):
+    print("Error: pdf can not be opened, convert it to png with:")
+    print()
+    print("convert {} {}".format(filename, filename.replace(".pdf", ".png")))
+    sys.exit(1)
+
+
+im = Image.open(filename)
+try:
+    dpi = im.info['dpi'][0]
+except:
+    dpi = 72
+    print("dpi not stored in image, {} used".format(dpi))
+width, height = im.size
+
+def pixel2cm(px):
+    return px * 2.54 / dpi
+
+def onselect(eclick, erelease):
+    rightPx = max(eclick.xdata, erelease.xdata)
+    leftPx = min(eclick.xdata, erelease.xdata)
+    topPx = min(eclick.ydata, erelease.ydata)
+    bottomPx = max(eclick.ydata, erelease.ydata)
+    print("trim={{{:.2f}cm {:.2f}cm {:.2f}cm {:.2f}cm}}, clip".format(pixel2cm(leftPx),
+                                                       pixel2cm(height-bottomPx),
+                                                       pixel2cm(width - rightPx),
+                                                       pixel2cm(topPx)))
+    plt.close()
+
+
+fig, ax = plt.subplots()
+arr = np.asarray(im)
+plt_image = plt.imshow(arr)
+
+ax.set_ylim(height, 0)
+ax.set_xlim(0, width)
+
+rs=widgets.RectangleSelector(
+    ax, onselect, drawtype='box',
+    rectprops = dict(facecolor='blue', edgecolor = 'black', alpha=0.5, fill=True))
+plt.show()
+
