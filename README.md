@@ -50,5 +50,10 @@ This script generates a graph made of ReFRESCO's module, module are linked based
 Dependencies: pyvis
 
 ## latex-trim
-This script returns trim parameter the image loaded given in parameter using mouse selection
+This script returns trim parameters for the image given in argument using mouse selection.
+
+```
+$ latex-trim graph.png
+trim={0.00cm 1.80cm 8.37cm 0.00cm}, clip
+```
 
