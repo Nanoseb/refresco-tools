@@ -18,12 +18,13 @@ filename = sys.argv[1]
 
 # If pdf file, converting it with imagemagik to png
 if filename.endswith(".pdf"):
-    cmd = ["convert", filename, "png:-"]
+    cmd = ["convert", filename, "-define", "png:color-type=6", "png:-"]
     fconvert = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = fconvert.communicate()
     assert fconvert.returncode == 0, stderr
 
-    im = Image.open(io.BytesIO(bytearray(stdout)))
+#     im = Image.open(io.BytesIO(bytearray(stdout)))
+    im = Image.open(io.BytesIO(stdout))
 else:
     im = Image.open(filename)
 
