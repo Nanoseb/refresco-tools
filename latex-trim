@@ -23,12 +23,12 @@ if filename.endswith(".pdf"):
 
 
 im = Image.open(filename)
-try:
-    dpi = im.info['dpi'][0]
-except:
-    dpi = 72
-    print("dpi not stored in image, {} used".format(dpi))
 width, height = im.size
+if 'dpi' in im.info:
+    dpi = im.info['dpi'][0]
+else:
+    # dpi not stored in image, revert to latex default: 72
+    dpi = 72
 
 def pixel2cm(px):
     return px * 2.54 / dpi
