@@ -39,9 +39,9 @@ def onselect(eclick, erelease):
     topPx = min(eclick.ydata, erelease.ydata)
     bottomPx = max(eclick.ydata, erelease.ydata)
     print("trim={{{:.2f}cm {:.2f}cm {:.2f}cm {:.2f}cm}}, clip".format(pixel2cm(leftPx),
-                                                       pixel2cm(height-bottomPx),
-                                                       pixel2cm(width - rightPx),
-                                                       pixel2cm(topPx)))
+                                                                      pixel2cm(height-bottomPx),
+                                                                      pixel2cm(width - rightPx),
+                                                                      pixel2cm(topPx)))
     plt.close()
 
 
@@ -52,8 +52,10 @@ plt_image = plt.imshow(arr)
 ax.set_ylim(height, 0)
 ax.set_xlim(0, width)
 
-rs=widgets.RectangleSelector(
-    ax, onselect, drawtype='box',
-    rectprops = dict(facecolor='blue', edgecolor = 'black', alpha=0.5, fill=True))
+rs = widgets.RectangleSelector(ax,
+                               onselect,
+                               drawtype='box',
+                               rectprops = dict(facecolor='red', edgecolor = 'black', alpha=0.5, fill=True))
+plt.tight_layout()
 plt.show()
 
