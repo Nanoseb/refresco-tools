@@ -5,25 +5,32 @@
 #    latex-trim [filename]
 #
 # License WTFPL
-
 import sys
+import io
+import subprocess
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
 import matplotlib.widgets as widgets
+from PIL import Image
 
 
 filename = sys.argv[1]
 
+# If pdf file, converting it with imagemagik to png
 if filename.endswith(".pdf"):
-    print("Error: pdf can not be opened, convert it to png with:")
-    print()
-    print("convert {} {}".format(filename, filename.replace(".pdf", ".png")))
-    sys.exit(1)
+    cmd = ["convert", filename, "png:-"]
+    fconvert = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = fconvert.communicate()
+    assert fconvert.returncode == 0, stderr
+
+    im = Image.open(io.BytesIO(bytearray(stdout)))
+else:
+    im = Image.open(filename)
 
 
-im = Image.open(filename)
+arr = np.asarray(im)
 width, height = im.size
+
 if 'dpi' in im.info:
     dpi = im.info['dpi'][0]
 else:
@@ -46,7 +53,6 @@ def onselect(eclick, erelease):
 
 
 fig, ax = plt.subplots()
-arr = np.asarray(im)
 plt_image = plt.imshow(arr)
 
 ax.set_ylim(height, 0)
