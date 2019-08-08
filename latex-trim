@@ -1,34 +1,37 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Small script to get the trim parameters for Latex
 # Usage:
 #    latex-trim [filename]
 #
+# Needs imagemagick for pdf inputs
 # License WTFPL
 import sys
 import io
 import subprocess
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
+import matplotlib.patches as patches
 from PIL import Image
+mpl.rcParams['toolbar'] = 'None'
 
 
 filename = sys.argv[1]
 
 # If pdf file, converting it with imagemagik to png
 if filename.endswith(".pdf"):
-    cmd = ["convert", filename, "-define", "png:color-type=6", "png:-"]
+    cmd = ["convert", filename, "png:-"]
     fconvert = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = fconvert.communicate()
     assert fconvert.returncode == 0, stderr
 
-#     im = Image.open(io.BytesIO(bytearray(stdout)))
-    im = Image.open(io.BytesIO(stdout))
+    inputImage = io.BytesIO(stdout)
 else:
-    im = Image.open(filename)
+    inputImage = filename 
 
-
+im = Image.open(inputImage).convert('RGB')
 arr = np.asarray(im)
 width, height = im.size
 
@@ -42,10 +45,10 @@ def pixel2cm(px):
     return px * 2.54 / dpi
 
 def onselect(eclick, erelease):
-    rightPx = max(eclick.xdata, erelease.xdata)
-    leftPx = min(eclick.xdata, erelease.xdata)
-    topPx = min(eclick.ydata, erelease.ydata)
-    bottomPx = max(eclick.ydata, erelease.ydata)
+    rightPx = min(max(eclick.xdata, erelease.xdata), width)
+    leftPx = max(min(eclick.xdata, erelease.xdata), 0)
+    topPx = max(min(eclick.ydata, erelease.ydata), 0)
+    bottomPx = min(max(eclick.ydata, erelease.ydata), height)
     print("trim={{{:.2f}cm {:.2f}cm {:.2f}cm {:.2f}cm}}, clip".format(pixel2cm(leftPx),
                                                                       pixel2cm(height-bottomPx),
                                                                       pixel2cm(width - rightPx),
@@ -56,13 +59,19 @@ def onselect(eclick, erelease):
 fig, ax = plt.subplots()
 plt_image = plt.imshow(arr)
 
-ax.set_ylim(height, 0)
-ax.set_xlim(0, width)
+border = (width+height)*0.05
+ax.set_xlim(-border, width + border)
+ax.set_ylim(height + border, -border)
+
+rect = patches.Rectangle((0, 0), width, height, linewidth=1, edgecolor='black', facecolor='none', alpha=0.2)
+ax.add_patch(rect)
 
 rs = widgets.RectangleSelector(ax,
                                onselect,
                                drawtype='box',
-                               rectprops = dict(facecolor='red', edgecolor = 'black', alpha=0.5, fill=True))
+                               rectprops = dict(facecolor='red', edgecolor = 'black', alpha=0.5, linestyle='--', fill=True))
+
+fig.canvas.set_window_title('latex-trim')
 plt.tight_layout()
 plt.show()
 

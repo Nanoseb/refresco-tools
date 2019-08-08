@@ -57,5 +57,5 @@ $ latex-trim graph.png
 trim={0.00cm 1.80cm 8.37cm 0.00cm}, clip
 ```
 
-Dependencies: imagemagik (for pdf images only)
+Dependencies: imagemagick (for pdf images only)
 
