@@ -17,10 +17,23 @@ import matplotlib.patches as patches
 from PIL import Image
 mpl.rcParams['toolbar'] = 'None'
 
-
 filename = sys.argv[1]
 
-# If pdf file, converting it with imagemagik to png
+def pixel2cm(px):
+    return px * 2.54 / dpi
+
+def onselect(eclick, erelease):
+    rightPx = min(max(eclick.xdata, erelease.xdata), width)
+    leftPx = max(min(eclick.xdata, erelease.xdata), 0)
+    topPx = max(min(eclick.ydata, erelease.ydata), 0)
+    bottomPx = min(max(eclick.ydata, erelease.ydata), height)
+    print("trim={{{:.2f}cm {:.2f}cm {:.2f}cm {:.2f}cm}}, clip".format(pixel2cm(leftPx),
+                                                                      pixel2cm(height-bottomPx),
+                                                                      pixel2cm(width - rightPx),
+                                                                      pixel2cm(topPx)))
+    plt.close()
+
+# If pdf file, converting it with imagemagick to png
 if filename.endswith(".pdf"):
     cmd = ["convert", filename, "png:-"]
     fconvert = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -41,21 +54,6 @@ else:
     # dpi not stored in image, revert to latex default: 72
     dpi = 72
 
-def pixel2cm(px):
-    return px * 2.54 / dpi
-
-def onselect(eclick, erelease):
-    rightPx = min(max(eclick.xdata, erelease.xdata), width)
-    leftPx = max(min(eclick.xdata, erelease.xdata), 0)
-    topPx = max(min(eclick.ydata, erelease.ydata), 0)
-    bottomPx = min(max(eclick.ydata, erelease.ydata), height)
-    print("trim={{{:.2f}cm {:.2f}cm {:.2f}cm {:.2f}cm}}, clip".format(pixel2cm(leftPx),
-                                                                      pixel2cm(height-bottomPx),
-                                                                      pixel2cm(width - rightPx),
-                                                                      pixel2cm(topPx)))
-    plt.close()
-
-
 fig, ax = plt.subplots()
 plt_image = plt.imshow(arr)
 
@@ -69,7 +67,7 @@ ax.add_patch(rect)
 rs = widgets.RectangleSelector(ax,
                                onselect,
                                drawtype='box',
-                               rectprops = dict(facecolor='red', edgecolor = 'black', alpha=0.5, linestyle='--', fill=True))
+                               rectprops = dict(facecolor='red', edgecolor = 'black', alpha=0.5, linestyle='dashed', fill=True))
 
 fig.canvas.set_window_title('latex-trim')
 plt.tight_layout()
