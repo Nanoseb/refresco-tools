@@ -27,10 +27,10 @@ def onselect(eclick, erelease):
     leftPx = max(min(eclick.xdata, erelease.xdata), 0)
     topPx = max(min(eclick.ydata, erelease.ydata), 0)
     bottomPx = min(max(eclick.ydata, erelease.ydata), height)
-    print("trim={{{:.2f}cm {:.2f}cm {:.2f}cm {:.2f}cm}}, clip".format(pixel2cm(leftPx),
-                                                                      pixel2cm(height-bottomPx),
-                                                                      pixel2cm(width - rightPx),
-                                                                      pixel2cm(topPx)))
+    print("trim={{{:.2f}cm {:.2f}cm {:.2f}cm {:.2f}cm}}, clip, ".format(pixel2cm(leftPx),
+                                                                        pixel2cm(height-bottomPx),
+                                                                        pixel2cm(width - rightPx),
+                                                                        pixel2cm(topPx)))
     plt.close()
 
 # If pdf file, converting it with imagemagick to png

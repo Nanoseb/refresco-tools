@@ -59,3 +59,6 @@ trim={0.00cm 1.80cm 8.37cm 0.00cm}, clip
 
 Dependencies: imagemagick (for pdf images only)
 
+## refresco-cmake
+Helper script to compile ReFRESCO using cmake
+
