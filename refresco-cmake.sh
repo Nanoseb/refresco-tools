@@ -31,6 +31,7 @@ echo "To put in .bashrc:
 
 export REFRESCO_INSTALL_DIR=$REFRESCO_INSTALL_DIR
 export REFRESCO_EXTLIBS_DIR=$REFRESCO_INSTALL_DIR
+export REFRESCO_CODE_DIR=$SOURCE_DIR/Code
 
 source $REFRESCO_INSTALL_DIR/bin/refresco-run.sh
 "
