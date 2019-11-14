@@ -62,3 +62,9 @@ Dependencies: imagemagick (for pdf images only)
 ## refresco-cmake
 Helper script to compile ReFRESCO using cmake
 
+## check\_declar
+Script to detect non declared variables of a fortran subroutine
+
+```
+$ check_declar file.F90 subroutineName
+```

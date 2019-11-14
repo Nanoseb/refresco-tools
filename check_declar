@@ -1,0 +1,40 @@
+#!/bin/bash
+# Detects non declared variables
+# license MIT
+
+if [ -z "$2" ]
+then
+    echo "Tries to detect non declared variables in a fortran function"
+    echo " Note that any global variable will be wrongly detected"
+    echo
+    echo "usage: $0 filename.F90 subroutineName"
+    exit 1
+fi
+
+inputfile=$1
+subroutine=$2
+
+nonvar="not pack size sum stat true false while do od if then allocate deallocate any all and any case count else end exit continue select"
+nonvar=$nonvar" "$(tr "[a-z]" "[A-Z]" <<<$nonvar)
+
+input=$(awk "/^SUBROUTINE\ $subroutine/{flag=1;next}/^END\ SUBROUTINE $subroutine/{flag=0}flag" $inputfile)
+
+initialised=$(sed 's/!.*$//' <<<"$input" | grep '::' | sed 's/^.*\:\://' | sed 's/,/\n/g' | sed 's/([^)]*)//g')
+
+
+var=$(sed 's/!.*$//' <<<"$input" | sed '/\:\:/d' | sed 's/CALL\ [^(]*//' | sed 's/call\ [^(]*//' | tr -c '[a-zA-Z0-9%]_' '\n' | sed '/^[0-9]*$/d')
+
+for word in ${nonvar[@]}
+do
+    var=$(sed /^$word$/d <<<"$var")
+done
+
+
+for word in ${initialised[@]}
+do
+    var=$(sed /^$word$/d <<<"$var")
+    var=$(sed /^$word%.*$/d <<<"$var")
+done
+
+echo -e "$var" | sort | uniq
+
