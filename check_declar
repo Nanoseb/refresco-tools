@@ -14,15 +14,15 @@ fi
 inputfile=$1
 subroutine=$2
 
-nonvar="not pack size sum stat true false while do od if then allocate deallocate any all and any case count else end exit continue select"
+nonvar="not pack size sum stat true false while do od if then allocate deallocate any all and any case count else end exit continue select present endif max min associated enddo nullify return trim or abs norm2"
 nonvar=$nonvar" "$(tr "[a-z]" "[A-Z]" <<<$nonvar)
 
 input=$(awk "/^SUBROUTINE\ $subroutine/{flag=1;next}/^END\ SUBROUTINE $subroutine/{flag=0}flag" $inputfile)
 
-initialised=$(sed 's/!.*$//' <<<"$input" | grep '::' | sed 's/^.*\:\://' | sed 's/,/\n/g' | sed 's/([^)]*)//g')
+initialised=$(sed 's/!.*$//' <<<"$input" | grep '::' | sed 's/^.*\:\://' | sed 's/,/\n/g' | sed 's/([^)]*)//g' | sed 's/=.*$//')
 
 
-var=$(sed 's/!.*$//' <<<"$input" | sed '/\:\:/d' | sed 's/CALL\ [^(]*//' | sed 's/call\ [^(]*//' | tr -c '[a-zA-Z0-9%]_' '\n' | sed '/^[0-9]*$/d')
+var=$(sed 's/!.*$//' <<<"$input" | sed '/\:\:/d' | sed 's/CALL\ [^(]*//' | sed 's/call\ [^(]*//'  | sed "s/'.*'//g" | tr -c '[a-zA-Z0-9%]_' '\n' | sed '/^[0-9]*$/d')
 
 for word in ${nonvar[@]}
 do
