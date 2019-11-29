@@ -68,3 +68,10 @@ Script to detect non declared variables of a fortran subroutine
 ```
 $ check_declar file.F90 subroutineName
 ```
+
+## report2metadata
+Script that extracts metadata from marin reports
+```
+$ report2metadata report.pdf
+```
+

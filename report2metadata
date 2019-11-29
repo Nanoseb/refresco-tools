@@ -1,0 +1,20 @@
+#!/bin/bash
+
+file="$1"
+
+output=$(pdftotext -htmlmeta "$1" -)
+
+title=$(grep -m 1 '<title>' <<<"$output" | awk -F'<|>' '{print $3}')
+author=$(grep -m 1 'name="Author"' <<<"$output" | sed 's/^.*content=//' | awk -F'"' '{print $2}')
+subject=$(grep -m 1 'name="Subject"' <<<"$output" | sed 's/^.*content=//' | awk -F'"' '{print $2}')
+keywords=$(grep -m 1 'name="Keywords"' <<<"$output" | sed 's/^.*content=//' | awk -F'"' '{print $2}')
+date=$(grep -m 2 '^: ' <<<"$output" | tail -n 1 | sed 's/..//')
+ID=$(grep -m 1 '^: ' <<<"$output" | sed 's/..//')
+
+echo Title: $title
+echo Subject: $subject
+echo Author: $author 
+echo Keywords: $keywords
+echo Date: $date
+echo ID: $ID
+
