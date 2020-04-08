@@ -70,6 +70,7 @@ def get_wdir(jobid):
 
 # get file to load
 foldername = ''
+counters_filename = None
 if args.path_or_jobid.isdigit():
     jobid = int(args.path_or_jobid)
     foldername = get_wdir(jobid)
@@ -88,8 +89,11 @@ if foldername:
     else:
         raise ValueError('File not found')
 
+    if os.path.isfile(foldername+"/counters.dat"):
+        counters_filename = foldername+"/counters.dat"
 
-def load_header(filename):
+
+def load_header(filename, counters_filename):
     """
         Loads residuals file header and compute size and ith_line
             to make sure only useful columns and a limited amount of lines are loaded
@@ -105,7 +109,11 @@ def load_header(filename):
 
 
     # select only useful columns
-    column2extract = [0,1]
+    if counters_filename:
+        column2extract = []
+    else:
+        column2extract = [0,1]
+
     header = re.findall('\"([^\"]+)\"', string_header)
     for idx,_ in enumerate(header):
         if ((header[idx].startswith("L2_") and disp_L2) or \
@@ -126,7 +134,7 @@ def load_header(filename):
 
     return (header, file_length, ith_begining, ith_line, column2extract)
 
-def load_residuals(filename, ith_begining, ith_line, column2extract):
+def load_residuals(filename, counters_filename, ith_begining, ith_line, column2extract):
     """
         Load part of the residuals file, from ith_begining to the end every ith_line lines
     """
@@ -134,12 +142,16 @@ def load_residuals(filename, ith_begining, ith_line, column2extract):
     with open(filename) as fin:
         residuals_return = np.loadtxt(itertools.islice(fin, ith_begining, None, ith_line), dtype=float, usecols=column2extract, skiprows=2)
 
+    if counters_filename:
+        with open(counters_filename) as fin:
+            counters_return = np.loadtxt(itertools.islice(fin, ith_begining, None, ith_line), dtype=int, usecols=[0,1], skiprows=2)
+        residuals_return = np.column_stack((counters_return, residuals_return))
     return residuals_return
 
 
 # Read of the residual.dat
-header, file_length, ith_begining, ith_line, column2extract = load_header(filename)
-residuals = load_residuals(filename, ith_begining, ith_line, column2extract)
+header, file_length, ith_begining, ith_line, column2extract = load_header(filename, counters_filename)
+residuals = load_residuals(filename, counters_filename, ith_begining, ith_line, column2extract)
 print("Plot residuals for:   " + filename)
 print("Data point displayed: " + str(len(residuals)) + " (out of " + str(file_length) + ")")
 
@@ -197,7 +209,7 @@ for idx, column in enumerate(header):
     else:
         label = re.sub("_", " ", column)
         label = re.sub("L2 ", "L_2 - ", label)
-        label = re.sub("Linf ", "L_\infty - ", label)
+        label = re.sub("Linf ", "L_\\\infty - ", label)
 
     if idx <= (len(header)/2) or not disp_sidebyside:
         ax = ax1
@@ -272,7 +284,7 @@ if follow:
         draw_plot()
         pyplot.pause(5)
 
-        residuals_new = load_residuals(filename, ith_begining, 1, column2extract)
+        residuals_new = load_residuals(filename, counters_filename, ith_begining, 1, column2extract)
         if residuals_new.size != 0:
             ith_begining = ith_begining + len(residuals_new)
             residuals = np.concatenate((residuals, residuals_new))
