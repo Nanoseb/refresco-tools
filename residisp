@@ -122,6 +122,9 @@ def load_header(filename, counters_filename):
 
     header = [ header[idx] for idx in column2extract ]
 
+    if counters_filename:
+        header = ["",""] + header
+
     # Load either then end of the file or every ith line
     if DISPLAY_END:
         ith_begining = max(0,file_length - MAX_line)
