@@ -15,7 +15,7 @@ tr, td {
   padding-right: 15px;
 }
 th {
-  text-align: center;
+  text-align: left;
 }
 table {
   border: 1px solid black;
@@ -26,17 +26,17 @@ table {
 echo '<table>'
 echo '<th>BC</th>'
 
-for BC in $BC_list
-do
-    echo '<th>'$BC'</th>'
-done
-
 for file in $file_list
 do
-    echo '<tr>'
     echo '<th>'$file'</th>'
+done
 
-    for BC in $BC_list
+for BC in $BC_list
+do
+    echo '<tr>'
+    echo '<th>'$BC'</th>'
+
+    for file in $file_list
     do
         values=$(grep -m 1 "^${BC}:$file" <<<"$result" | awk -F':' '{print $3}')
         echo '<td>' $values '</td>'
