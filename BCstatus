@@ -17,6 +17,12 @@ th, td, tr {
   padding-left: 10px;
   padding-right: 10px;
 }
+.NEUMANN {
+ color: #B0000A;
+}
+.DIRICHLET {
+ color: #0049B0;
+}
 </style>'
 
 echo '<table>'
@@ -24,7 +30,7 @@ echo '<th>BC</th>'
 
 for file in $file_list
 do
-    echo '<th>'$file'</th>' | sed 's/.F90//'
+    echo '<th>'$file'</th>' | sed 's/\.F90//'
 done
 
 for BC in $BC_list
@@ -38,10 +44,11 @@ do
         nb=$(grep -c "^${BC}:$file" <<<"$result")
         if [[ "$nb" -gt 1 ]]
         then
-            echo '<td>'$values'*</td>'
+            nb='*'
         else
-            echo '<td>'$values'</td>'
+            nb=''
         fi
+        echo '<td class="'$values'">'$values$nb'</td>'
     done
 
     echo '</tr>'
