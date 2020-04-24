@@ -75,3 +75,10 @@ Script that extracts metadata from marin reports
 $ report2metadata report.pdf
 ```
 
+## BCstatus
+Script to get the method used by ReFRESCO to handle each boundary condition, needs `$REFRESCO_CODE_DIR` to be defined correctly. The output is an html table that can be put directly on mods.
+
+
+```
+$ BCstatus
+```

@@ -1,0 +1,40 @@
+#!/bin/bash
+# Get the status of Boundary conditions for ReFRESCO, and export it to HTML tables
+
+result=$(grep '^\ *BCType.*NEUMANN\|^\ *BCType.*DIRICHLET' $REFRESCO_CODE_DIR/src/*F90 | \
+    sed 's/^.*\///;s/!.*$//;s/BCType//;s/[(|)]//g;s/=/:/;s/\ //g' |\
+    awk -F':' '{print $2 ":" $1 ":" $3}')
+
+BC_list=$(awk -F':' '{print $1}' <<<$result | sort | uniq)
+
+echo '<style>
+tr, td {
+  padding: 7px;
+  padding-right: 15px;
+}
+table {
+  border: 1px solid black;
+  width: 33%;
+}
+</style>'
+
+for BC in $BC_list
+do
+echo '<table>'
+    echo '<tr>'
+
+    nb=$(grep -c "^${BC}:" <<<$result)
+    #nb=$((nb + 1))
+    echo '<td rowspan="'$nb'" >'$BC'</td>'
+    
+
+    grep "^${BC}:" <<<"$result" |\
+        awk -F':' '{print "<tr><td>" $2 "</td><td>" $3 "</td></tr>"}' |\
+        sed '1 s/<tr>//'
+
+    #echo '</tr>'
+echo '</table>'
+done
+
+
+
