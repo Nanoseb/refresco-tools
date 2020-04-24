@@ -1,5 +1,6 @@
 #!/bin/bash
-# Get the status of Boundary conditions for ReFRESCO, and export it to HTML tables
+# Generates an html table of Boundary conditions for ReFRESCO
+# $REFRESCO_CODE_DIR needs to be defined correctly for this to run
 
 result=$(grep '^\ *BCType.*NEUMANN\|^\ *BCType.*DIRICHLET' $REFRESCO_CODE_DIR/src/*F90 | \
     sed 's/^.*\///;s/!.*$//;s/BCType//;s/[(|)]//g;s/=/:/;s/\ //g' |\
