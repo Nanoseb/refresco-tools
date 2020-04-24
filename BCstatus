@@ -13,6 +13,10 @@ echo '<style>
 th {
   text-align: left;
 }
+th, td, tr {
+  padding-left: 10px;
+  padding-right: 10px;
+}
 </style>'
 
 echo '<table>'
@@ -20,7 +24,7 @@ echo '<th>BC</th>'
 
 for file in $file_list
 do
-    echo '<th>'$file'</th>'
+    echo '<th>'$file'</th>' | sed 's/.F90//'
 done
 
 for BC in $BC_list
