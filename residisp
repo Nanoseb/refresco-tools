@@ -81,6 +81,7 @@ else:
         foldername = args.path_or_jobid
     else:
         raise ValueError('File not found')
+
 if foldername:
     if os.path.isfile(foldername+"/residuals_unstd.dat"):
         filename = foldername+"/residuals_unstd.dat"
@@ -89,8 +90,9 @@ if foldername:
     else:
         raise ValueError('File not found')
 
-    if os.path.isfile(foldername+"/counters.dat"):
-        counters_filename = foldername+"/counters.dat"
+my_counters_filename = filename.replace("residuals", "counters")
+if os.path.isfile(my_counters_filename):
+    counters_filename = my_counters_filename
 
 
 def load_header(filename, counters_filename):
