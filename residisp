@@ -150,7 +150,10 @@ def load_residuals(filename, counters_filename, ith_begining, ith_line, column2e
     if counters_filename:
         with open(counters_filename) as fin:
             counters_return = np.loadtxt(itertools.islice(fin, ith_begining, None, ith_line), dtype=int, usecols=[0,1], skiprows=2)
-        residuals_return = np.column_stack((counters_return, residuals_return))
+
+        nb_line = min(counters_return.shape[0], residuals_return.shape[0])
+        residuals_return = np.column_stack((counters_return[0:nb_line], residuals_return[0:nb_line]))
+
     return residuals_return
 
 
