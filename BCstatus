@@ -6,8 +6,9 @@ result=$(grep '^\ *BCType.*NEUMANN\|^\ *BCType.*DIRICHLET' $REFRESCO_CODE_DIR/sr
     sed 's/^.*\///;s/!.*$//;s/BCType//;s/[(|)]//g;s/=/:/;s/\ //g' |\
     awk -F':' '{print $2 ":" $1 ":" $3}')
 
-BC_list=$(awk -F':' '{print $1}' <<<$result | sort | uniq)
-file_list=$(awk -F':' '{print $2}' <<<$result | sort | uniq)
+
+BC_list=$(awk -F':' '{print $1}' <<<"$result" | sort | uniq)
+file_list=$(awk -F':' '{print $2}' <<<"$result" | sort | uniq)
 
 
 echo '<style>
@@ -28,6 +29,7 @@ th, td, tr {
 
 echo '<table>'
 echo '<th>BC</th>'
+
 
 for file in $file_list
 do
