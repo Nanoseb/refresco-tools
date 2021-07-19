@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+# usage: xmldiff file1.xml file2.xml
+
+difftool=diff
+
+while [[ $# -gt 0 ]]
+do
+    case $1 in
+        --vim|-v)
+            difftool=vimdiff
+            shift
+            ;;
+        --color|-c)
+            difftool=colordiff
+            shift
+            ;;
+        *)
+            if [ -z "$fileA" ] 
+            then
+                fileA="$1"
+            else
+                fileB="$1"
+            fi
+            shift
+            ;;
+    esac
+done
+
+$difftool <(xmllint --c14n "$fileA") <(xmllint --c14n "$fileB")
