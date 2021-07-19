@@ -82,3 +82,13 @@ Script to get the method used by ReFRESCO to handle each boundary condition, nee
 ```
 $ BCstatus
 ```
+
+## xmldiff
+Print to stdout a 'functional' diff between 2 xml files.
+
+```
+$ xmldiff file1.xml file2.xml
+
+# or to use vimdiff
+$ xmldiff file1.xml file2.xml --vim
+```
