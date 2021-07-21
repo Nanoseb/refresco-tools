@@ -6,7 +6,7 @@ import argparse
 from paraview.simple import *
 
 
-parser = argparse.ArgumentParser(description='Slice cgns files.')
+parser = argparse.ArgumentParser(description='Slice cgns files. To be used with pvbatch for example: pvbatch slice.py -y file.cgns')
 
 parser.add_argument('path', type=str, nargs='?', help='cgns file path', default='.')
 parser.add_argument('-x', action='store_true', default=False,
@@ -27,11 +27,12 @@ if args.x:
     slice_name = "x"
     Normal = [1, 0, 0]
     Origin = [args.loc, 0, 0]
-if args.y:
+elif args.y:
     slice_name = "y"
     Normal = [0, 1, 0]
     Origin = [0, args.loc, 0]
-if args.z:
+else:
+# if args.z:
     slice_name = "z"
     Normal = [0, 0, -1]
     Origin = [0, 0, args.loc]
@@ -43,8 +44,6 @@ cgnsfile = args.path
 export_filename = "{}_slice_{}_{}.png".format(os.path.splitext(cgnsfile)[0],
                                               slice_name, 
                                               field)
-
-
 
 solutionCgns = CGNSSeriesReader(registrationName='solution.cgns', FileNames=[cgnsfile])
 solutionCgns.Bases = ['Base_Volume_elements']
