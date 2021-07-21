@@ -92,3 +92,13 @@ $ xmldiff file1.xml file2.xml
 # or to use vimdiff
 $ xmldiff file1.xml file2.xml --vim
 ```
+
+## slice.py
+Paraview script to slice cgns file with minimal interation
+```
+# to slice in the x direction at x=3 and display Pressure field
+pvbatch slice.py --field Pressure -x --loc 0.2 solution.cgns
+
+# help page
+pvbatch slice.py -h
+```
