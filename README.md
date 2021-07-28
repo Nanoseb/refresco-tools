@@ -102,3 +102,10 @@ pvbatch slice.py --field Pressure -x --loc 0.2 solution.cgns
 # help page
 pvbatch slice.py -h
 ```
+
+## `num_uncertainty.py`
+Python wrapper for Eca's numerical uncertainty tool
+```
+uncertainty, p, fit_function = get_uncertainty(ncell_list, value_list)
+
+```
