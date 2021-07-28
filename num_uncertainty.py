@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# license MIT
+# author: Sebastien Lemaire <sebastien.lemaire@soton.ac.uk>
 
 import numpy as np
 import os
