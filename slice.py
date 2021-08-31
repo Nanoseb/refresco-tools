@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Export slice of cgns meshes
+# Examples:
+# pvbatch slice.py --field Pressure -x --loc 0.2 solution.cgns
+# pvbatch slice.py --field Velocity -z solution.cgns
+# pvbatch slice.py --help
+#
+# MIT license: Sebastien Lemaire
 
 import os
 import argparse
