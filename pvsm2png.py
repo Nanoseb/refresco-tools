@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Export png from cgns and paraview state file
 # Usage:
-# pvpython pvsm2png.py --state file.pvsm --cgns solution.cgns
+# pvpython pvsm2png.py statefile.pvsm solution.cgns
 # MIT license: Sebastien Lemaire
 
 import os
