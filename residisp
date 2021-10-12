@@ -90,7 +90,7 @@ if foldername:
     else:
         raise ValueError('File not found')
 
-my_counters_filename = filename.replace("residuals", "counters")
+my_counters_filename = filename.replace("residuals", "counters").replace("changes", "counters")
 if os.path.isfile(my_counters_filename):
     counters_filename = my_counters_filename
 
